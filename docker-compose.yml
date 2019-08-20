@@ -1,0 +1,47 @@
+version: '3'
+services:
+
+  prom:
+    container_name: prom
+    image: prom/prometheus
+    network_mode: 'host'
+    volumes:
+      - './prometheus/:/prometheus'
+      - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - './prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml'
+    command: '--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus'
+    restart: always
+    ports:
+      - '9090:9090'
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    network_mode: 'host'
+    volumes:
+      - './grafana/:/var/lib/grafana/'
+    restart: always
+    ports:
+      - '3000:3000'
+    depends_on:
+      - prom
+  
+  docker-stats-exporter:
+    container_name: docker-stats-exporter
+    image: wywywywy/docker_stats_exporter:latest
+    network_mode: 'host'
+    ports:
+      - '9487:9487'
+    volumes: 
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/usr/bin/docker:/usr/bin/docker'
+
+  # exporter:
+  #   container_name: exporter
+  #   image: prom/node-exporter
+  #   network_mode: 'host'
+  #   pid: 'host'
+  #   volumes:
+  #     - '/:/host:ro,rslave'
+  #   command:
+  #     - '--path.rootfs=/host'
